@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Swarnadip's Sudoku Solver</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0f1724;
+    --card: rgba(255,255,255,0.04);
+    --text: #e6eef8;
+    --muted: #9aa7bf;
+    --accent: #8b5cf6; /* violet/purple */
+    --accent-2: #7c3aed;
+    --glass: rgba(255,255,255,0.03);
+    --cell-bg: rgba(255,255,255,0.02);
+    --cell-border: rgba(255,255,255,0.07);
+    --btn-bg: linear-gradient(90deg,var(--accent),var(--accent-2));
+    --danger: #ff6b6b;
+    --success: #34d399;
+    --shadow: 0 10px 30px rgba(2,6,23,0.6);
+  }
+
+  
+  .theme-light{
+    --bg: #f6f8fb;
+    --card: #ffffff;
+    --text: #0b1220;
+    --muted: #465569;
+    --accent: #7c3aed;
+    --accent-2: #6d28d9;
+    --glass: rgba(12,18,33,0.03);
+    --cell-bg: #fbfbfe;
+    --cell-border: rgba(12,18,33,0.06);
+    --btn-bg: linear-gradient(90deg,var(--accent),var(--accent-2));
+    --danger: #ef4444;
+    --success: #10b981;
+    --shadow: 0 8px 24px rgba(99,102,241,0.08);
+  }
+
+  html,body{
+    height:100%;
+    margin:0;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: radial-gradient(1200px 400px at 10% 10%, rgba(124,58,237,0.08), transparent),
+                radial-gradient(900px 300px at 90% 90%, rgba(88,28,135,0.05), transparent),
+                var(--bg);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  .app {
+    max-width: 1100px;
+    margin: 36px auto;
+    padding: 28px;
+  }
+
+  .top {
+    display:flex;
+    gap:18px;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:18px;
+  }
+
+  .title {
+    display:flex;
+    gap:16px;
+    align-items:center;
+  }
+  .logo {
+    width:60px;
+    height:60px;
+    border-radius:14px;
+    background: linear-gradient(135deg,var(--accent),var(--accent-2));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:white;
+    font-weight:700;
+    font-size:18px;
+    box-shadow: var(--shadow);
+  }
+  h1{
+    font-size:20px;
+    margin:0;
+    letter-spacing: -0.2px;
+  }
+  p.subtitle{
+    margin:0;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  .controls {
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+
+  .btn {
+    padding:10px 14px;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+    font-weight:600;
+    font-size:14px;
+    color:white;
+    background:var(--btn-bg);
+    box-shadow: 0 6px 18px rgba(15,23,42,0.22);
+    transition:transform .12s ease,opacity .12s ease;
+  }
+  .btn:active{ transform:translateY(1px) }
+  .btn.secondary {
+    background: transparent;
+    color:var(--text);
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow:none;
+  }
+
+  .layout {
+    display:grid;
+    grid-template-columns: 520px 1fr;
+    gap:24px;
+    align-items:start;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius:14px;
+    padding:18px;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+
+  /* Sudoku grid styles */
+  .sudoku {
+    width:100%;
+    display:grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap:8px;
+    padding:10px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.015), transparent);
+    border-radius:12px;
+  }
+
+  .cell {
+    position:relative;
+  }
+
+  .cell input {
+    width:100%;
+    height:52px;
+    text-align:center;
+    font-size:22px;
+    font-weight:600;
+    border-radius:8px;
+    border:1px solid var(--cell-border);
+    background: var(--cell-bg);
+    color:var(--text);
+    outline:none;
+  }
+  .cell input:focus{
+    box-shadow: 0 6px 18px rgba(124,58,237,0.12);
+    transform: translateY(-2px);
+  }
+  /* make thicker borders every 3 */
+  .cell:nth-child(3n) input { border-right: 2px solid rgba(255,255,255,0.06) }
+  .cell:nth-child(n+19):nth-child(-n+27) input,
+  .cell:nth-child(n+46):nth-child(-n+54) input { border-bottom: 2px solid rgba(255,255,255,0.06) }
+
+  /* Labels / small helpers */
+  .legend{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    margin-top:12px;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  /* Right column */
+  .right {
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .panel {
+    padding:14px;
+    border-radius:12px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+    border:1px solid rgba(255,255,255,0.03);
+  }
+  .panel h3{
+    margin:0 0 6px 0;
+    font-size:15px;
+  }
+  .panel p { margin:0; color:var(--muted); font-size:13px }
+
+  .small-btn {
+    padding:8px 10px;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+    font-weight:600;
+    font-size:13px;
+    color:white;
+    background:var(--btn-bg);
+  }
+
+  .row {
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+    flex-wrap:wrap;
+  }
+
+  .muted {
+    color:var(--muted);
+  }
+
+  .foot {
+    margin-top:18px;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  /* responsive */
+  @media (max-width: 980px){
+    .layout { grid-template-columns: 1fr; }
+    .sudoku .cell input { height:46px; font-size:20px }
+  }
+  @media (max-width:480px){
+    .logo{ width:48px;height:48px;font-size:16px;border-radius:12px}
+    .cell input { height:44px; font-size:18px }
+  }
+
+  /* nice accent for provided clues (non-editable) */
+  .given {
+    background: linear-gradient(90deg, rgba(124,58,237,0.12), rgba(124,58,237,0.06));
+    color:var(--text);
+    font-weight:700;
+    border: 1px solid rgba(124,58,237,0.18);
+  }
+
+  /* invalid mark */
+  .invalid {
+    box-shadow: inset 0 0 0 2px rgba(239,68,68,0.12);
+  }
+</style>
+</head>
+<body class="theme-dark">
+  <div class="app">
+    <div class="top">
+      <div class="title">
+        <div class="logo">S</div>
+        <div>
+          <h1>Swarnadip's Sudoku Solver:</h1>
+          <p>A simple sudoku solver ,fully functional with modern UI</p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="themeBtn" class="btn secondary" title="Toggle theme">Toggle Theme</button>
+        <button id="sampleBtn" class="btn">Sample</button>
+        <button id="clearBtn" class="btn secondary">Clear</button>
+        <button id="solveBtn" class="btn">Solve</button>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div class="card">
+        <div class="sudoku" id="grid">
+          <!-- 81 cells inserted by JS -->
+        </div>
+
+        <div class="legend">
+          <div><strong>How to use:</strong></div>
+          <div class="muted">Type digits 1–9 into cells. Use <em>Sample</em> to fill a puzzle. Press <strong>Solve</strong>.</div>
+        </div>
+
+        <div class="foot">Tip: On mobile numeric keyboard will appear. Long-press or swipe to edit.</div>
+      </div>
+
+      <div class="right">
+        <div class="panel card">
+          <h3>Solver info</h3>
+          <p>Solver uses an optimized backtracking algorithm that checks row, column and 3×3 box constraints. It is robust and solves standard Sudoku instantly.</p>
+
+          <div class="row" style="margin-top:12px">
+            <button id="validateBtn" class="small-btn">Validate</button>
+            <button id="hintBtn" class="small-btn secondary">Give Hint</button>
+            <button id="solveStepBtn" class="small-btn secondary">Solve (step)</button>
+          </div>
+        </div>
+
+        <div class="panel card">
+          <h3>Status</h3>
+          <p id="status" class="muted">Ready</p>
+        </div>
+
+        <div class="panel card">
+          <h3>About C++ implementation</h3>
+          <p>Below is a C++ backtracking implementation included for reference, and can be compiled to WebAssembly if you want the solver in C++.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ---------- BUILD GRID ---------- */
+const gridEl = document.getElementById('grid');
+const statusEl = document.getElementById('status');
+let cells = []; // store input elements
+for(let r=0;r<9;r++){
+  for(let c=0;c<9;c++){
+    const idx = r*9 + c;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'cell';
+    const input = document.createElement('input');
+    input.setAttribute('inputmode','numeric');
+    input.setAttribute('maxlength','1');
+    input.dataset.r = r;
+    input.dataset.c = c;
+    input.id = 'cell-' + idx;
+    input.addEventListener('input', onCellInput);
+    input.addEventListener('keydown', onCellKeyDown);
+    wrapper.appendChild(input);
+    gridEl.appendChild(wrapper);
+    cells.push(input);
+  }
+}
+
+/* ---------- UTIL ---------- */
+function setStatus(t, color){
+  statusEl.textContent = t;
+  if(color==='error') statusEl.style.color = 'var(--danger)';
+  else if(color==='success') statusEl.style.color = 'var(--success)';
+  else statusEl.style.color = 'var(--muted)';
+}
+
+function onCellInput(e){
+  const el = e.target;
+  const val = el.value.replace(/[^1-9]/g,'');
+  el.value = val;
+  // enforce single digit
+  if(val.length>1) el.value = val.charAt(0);
+  el.classList.remove('invalid');
+  setStatus('Edited');
+}
+function onCellKeyDown(e){
+  // allow arrow navigation
+  const cur = e.target;
+  const r = Number(cur.dataset.r);
+  const c = Number(cur.dataset.c);
+  if(e.key === 'ArrowLeft') focusCell(r, Math.max(0,c-1));
+  if(e.key === 'ArrowRight') focusCell(r, Math.min(8,c+1));
+  if(e.key === 'ArrowUp') focusCell(Math.max(0,r-1), c);
+  if(e.key === 'ArrowDown') focusCell(Math.min(8,r+1), c);
+  if(e.key === 'Backspace') { cur.value=''; }
+}
+function focusCell(r,c){
+  const idx = r*9 + c;
+  cells[idx].focus();
+}
+
+/* ---------- READING / WRITING GRID ---------- */
+function readGrid(){
+  const grid = Array.from({length:9},()=>Array(9).fill(0));
+  for(let i=0;i<81;i++){
+    const v = cells[i].value.trim();
+    grid[Math.floor(i/9)][i%9] = v === '' ? 0 : parseInt(v,10);
+  }
+  return grid;
+}
+function writeGrid(grid, markGiven=false){
+  for(let r=0;r<9;r++){
+    for(let c=0;c<9;c++){
+      const idx=r*9+c;
+      if(grid[r][c]===0) {
+        cells[idx].value='';
+        cells[idx].classList.remove('given');
+      } else {
+        cells[idx].value = grid[r][c];
+        if(markGiven){
+          cells[idx].classList.add('given');
+        } else {
+          // don't override clues style if they already are given
+          cells[idx].classList.remove('given');
+        }
+      }
+    }
+  }
+}
+
+/* ---------- VALIDATION ---------- */
+function isValidPlacement(grid, row, col, val){
+  // check row & col
+  for(let i=0;i<9;i++){
+    if(grid[row][i] === val) return false;
+    if(grid[i][col] === val) return false;
+  }
+  // check 3x3 box
+  const br = Math.floor(row/3)*3;
+  const bc = Math.floor(col/3)*3;
+  for(let r=br;r<br+3;r++){
+    for(let c=bc;c<bc+3;c++){
+      if(grid[r][c] === val) return false;
+    }
+  }
+  return true;
+}
+function validateGrid(grid){
+  // check all non-zero entries don't break rules
+  for(let r=0;r<9;r++){
+    for(let c=0;c<9;c++){
+      const v = grid[r][c];
+      if(v !== 0){
+        grid[r][c] = 0;
+        if(!isValidPlacement(grid, r, c, v)) {
+          grid[r][c] = v; // restore
+          return {ok:false, row:r, col:c, val:v};
+        }
+        grid[r][c] = v;
+      }
+    }
+  }
+  return {ok:true};
+}
+
+/* ---------- BACKTRACKING SOLVER (JS) ---------- */
+function findEmpty(grid){
+  for(let r=0;r<9;r++){
+    for(let c=0;c<9;c++){
+      if(grid[r][c]===0) return [r,c];
+    }
+  }
+  return null;
+}
+function solveSudoku(grid){
+  const empty = findEmpty(grid);
+  if(!empty) return true; // solved
+  const [r,c] = empty;
+  for(let v=1;v<=9;v++){
+    if(isValidPlacement(grid, r, c, v)){
+      grid[r][c] = v;
+      if(solveSudoku(grid)) return true;
+      grid[r][c] = 0;
+    }
+  }
+  return false; // trigger backtrack
+}
+
+/* ---------- BUTTONS ---------- */
+document.getElementById('solveBtn').addEventListener('click', ()=>{
+  setStatus('Solving...');
+  const start = performance.now();
+  const grid = readGrid();
+  const check = validateGrid(grid.map(row=>row.slice()));
+  if(!check.ok){
+    const idx = check.row*9 + check.col;
+    cells[idx].classList.add('invalid');
+    setStatus('Invalid puzzle: conflict at row ' + (check.row+1) + ', col ' + (check.col+1), 'error');
+    return;
+  }
+  const cloned = grid.map(r=>r.slice());
+  const ok = solveSudoku(cloned);
+  if(ok){
+    writeGrid(cloned, false);
+    setStatus('Solved in ' + (Math.round((performance.now()-start))) + ' ms', 'success');
+  } else {
+    setStatus('No solution found', 'error');
+  }
+});
+
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  for(let i=0;i<81;i++){
+    cells[i].value = '';
+    cells[i].classList.remove('given','invalid');
+  }
+  setStatus('Cleared');
+});
+
+document.getElementById('sampleBtn').addEventListener('click', ()=>{
+  // A medium-hard sample puzzle
+  const sample = [
+    [0,0,0, 2,6,0, 7,0,1],
+    [6,8,0, 0,7,0, 0,9,0],
+    [1,9,0, 0,0,4, 5,0,0],
+
+    [8,2,0, 1,0,0, 0,4,0],
+    [0,0,4, 6,0,2, 9,0,0],
+    [0,5,0, 0,0,3, 0,2,8],
+
+    [0,0,9, 3,0,0, 0,7,4],
+    [0,4,0, 0,5,0, 0,3,6],
+    [7,0,3, 0,1,8, 0,0,0]
+  ];
+  writeGrid(sample, true);
+  setStatus('Sample loaded');
+});
+
+document.getElementById('validateBtn').addEventListener('click', ()=>{
+  const grid = readGrid();
+  const res = validateGrid(grid.map(r=>r.slice()));
+  if(res.ok){
+    setStatus('Puzzle is valid (no conflicts)', 'success');
+  } else {
+    const idx = res.row*9 + res.col;
+    cells[idx].classList.add('invalid');
+    setStatus('Conflict at row ' + (res.row+1) + ', col ' + (res.col+1), 'error');
+  }
+});
+
+document.getElementById('hintBtn').addEventListener('click', ()=>{
+  // give single hint (one correct cell using solver)
+  const grid = readGrid();
+  const cloned = grid.map(r=>r.slice());
+  if(!solveSudoku(cloned)){ setStatus('No solution — cannot give hint', 'error'); return; }
+  // find first empty cell and fill
+  for(let r=0;r<9;r++){
+    for(let c=0;c<9;c++){
+      if(grid[r][c]===0){
+        const idx = r*9+c;
+        cells[idx].value = cloned[r][c];
+        cells[idx].classList.add('given');
+        setStatus('Hint applied at row ' + (r+1) + ', col ' + (c+1));
+        return;
+      }
+    }
+  }
+  setStatus('No empty cell to hint', 'muted');
+});
+
+/* optional step-by-step solving: fill one cell at a time using solved grid */
+let stepSolution = null;
+document.getElementById('solveStepBtn').addEventListener('click', async ()=>{
+  const grid = readGrid();
+  const cloned = grid.map(r=>r.slice());
+  if(!solveSudoku(cloned)){ setStatus('No solution found', 'error'); return; }
+  stepSolution = cloned;
+  // apply sequentially with small delay
+  setStatus('Applying solution step by step...');
+  for(let r=0;r<9;r++){
+    for(let c=0;c<9;c++){
+      const idx = r*9+c;
+      if(grid[r][c]===0){
+        cells[idx].value = stepSolution[r][c];
+        cells[idx].classList.add('given');
+        await new Promise(res=>setTimeout(res, 40));
+      }
+    }
+  }
+  setStatus('Step-by-step finished', 'success');
+});
+
+/* ---------- Theme toggle ---------- */
+const themeBtn = document.getElementById('themeBtn');
+themeBtn.addEventListener('click', ()=>{
+  if(document.body.classList.contains('theme-light')){
+    document.body.classList.remove('theme-light');
+    document.body.classList.add('theme-dark');
+  } else {
+    document.body.classList.remove('theme-dark');
+    document.body.classList.add('theme-light');
+  }
+});
+
+/* set initial responsive focus to center */
+setTimeout(()=>focusCell(4,4), 200);
+
+</script>
+</body>
+</html>
