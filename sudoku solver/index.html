@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Swarnadip's Sudoku Solver:</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="theme-dark">
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">S</div>
+        <div>
+          <h1>Swarnadip's Sudoku Solver:</h1>
+          <p class="subtitle">• Random sample puzzles • Light / Dark theme</p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="themeBtn" class="btn secondary">Toggle Theme</button>
+        <button id="sampleBtn" class="btn">Sample</button>
+        <button id="clearBtn" class="btn alt">Clear</button>
+        <button id="hintBtn" class="btn secondary">Hint</button>
+        <button id="validateBtn" class="btn secondary">Validate</button>
+        <button id="solveBtn" class="btn">Solve</button>
+        <button id="solveAnimBtn" class="btn">Solve (Animate)</button>
+      </div>
+    </header>
+
+    <main class="main-grid">
+      <section class="card grid-card">
+        <div id="sudoku" class="sudoku-grid" aria-label="Sudoku grid">
+          <!-- 81 inputs will be injected by script.js -->
+        </div>
+        <div class="legend">Tip: Shift+Click a cell to lock as pre-filled. Use <strong>Sample</strong> to load a random puzzle.</div>
+      </section>
+
+      <aside class="card info-card">
+        <h3>Controls</h3>
+        <p class="muted">Sample: load random puzzle. Clear: remove entries. Hint: fills one correct cell. Validate: check conflicts. Solve: instant solve. Animate: watch backtracking live.</p>
+
+        <div class="status-panel">
+          <div><strong>Status:</strong> <span id="status" class="muted">Ready</span></div>
+          <div style="margin-top:8px">
+            <label>Animation Speed
+              <input id="speed" type="range" min="1" max="100" value="40">
+            </label>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <h4>C++ Reference (backtracking)</h4>
+          
+          </pre>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="foot">Made by Swarnadip </footer>
+  </div>
+
+  <script src="solver.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
