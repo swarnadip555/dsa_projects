@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Swarnadip's Sorting Visualizer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-theme="blue">
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden>
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="3" width="18" height="18" rx="4" fill="url(#g)" />
+          </svg>
+        </div>
+        <div>
+          <h1>Swarnadip's Sorting Visualizer:</h1>
+          <div class="subtitle">
+            Modern UI • Deep Blue / White / Black themes • Algorithms visualized
+          </div>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="card">
+          <div class="row" style="margin-bottom:8px">
+            <label class="small">Algorithm</label>
+            <select id="algoSelect">
+              <option>Bubble Sort</option>
+              <option>Selection Sort</option>
+              <option>Insertion Sort</option>
+              <option>Merge Sort</option>
+              <option>Quick Sort</option>
+              <option>Heap Sort</option>
+            </select>
+            <div class="small" id="complexity">Time: O(n²)</div>
+          </div>
+          <div class="row">
+            <label class="small">Size</label>
+            <input id="sizeRange" type="range" min="10" max="160" value="60">
+            <label class="small">Speed</label>
+            <input id="speedRange" type="range" min="1" max="500" value="100">
+          </div>
+          <div class="row" style="margin-top:8px;justify-content:space-between">
+            <div style="display:flex;gap:8px">
+              <button id="newArrayBtn" class="ghost"><span class="icon">🔁</span>New Array</button>
+              <button id="sortBtn" class="primary"><span class="icon">▶️</span>Sort</button>
+              <button id="pauseBtn" class="ghost"><span class="icon">⏸️</span>Pause</button>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button id="themeBlue" class="ghost" title="Blue Theme">🔵</button>
+              <button id="themeDark" class="ghost" title="Dark Theme">⚫</button>
+              <button id="themeLight" class="ghost" title="Light Theme">⚪</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section class="visual card">
+      <div class="visual-top">
+        <div class="row small"><div id="status">Ready</div></div>
+        <div class="legend">
+          <div><span class="dot" style="background:var(--compare)"></span>Comparing</div>
+          <div><span class="dot" style="background:var(--swap)"></span>Swapping</div>
+          <div><span class="dot" style="background:var(--sorted)"></span>Sorted</div>
+        </div>
+      </div>
+
+      <div class="bars" id="bars"></div>
+      <footer>Made by Swarnadip — Algorithms implemented in JavaScript following  DSA logic</footer>
+    </section>
+  </div>
+
+  <script src="solver.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
